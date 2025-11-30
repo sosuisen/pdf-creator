@@ -5,15 +5,16 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="375.0" prefWidth="283.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.sosuisen.MainController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="357.0" prefWidth="285.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.sosuisen.MainController">
     <children>
         <Label layoutX="24.0" layoutY="92.0" text="2. 画像のあるフォルダを選んでください。" />
       <Label layoutX="23.0" layoutY="23.0" prefHeight="17.0" prefWidth="223.0" text="1. 作りたいPDFのタイトルを入力してください。" />
       <TextField fx:id="pdfTitleLabel" layoutX="36.0" layoutY="50.0" promptText="タイトル" />
       <Button fx:id="selectFolderButton" layoutX="37.0" layoutY="124.0" mnemonicParsing="false" text="フォルダを選ぶ" />
-      <Label fx:id="folderNameLabel" layoutX="36.0" layoutY="183.0" prefHeight="50.0" prefWidth="223.0" wrapText="true" />
-      <Label layoutX="24.0" layoutY="245.0" text="3. 作成ボタンを押してください。" />
-      <Button fx:id="createPdfButton" layoutX="37.0" layoutY="269.0" mnemonicParsing="false" text="PDF作成" />
-      <Label fx:id="outputHintLabel" layoutX="37.0" layoutY="304.0" prefHeight="63.0" prefWidth="223.0" wrapText="true" />
+      <Label fx:id="folderNameLabel" layoutX="37.0" layoutY="162.0" prefHeight="50.0" prefWidth="223.0" wrapText="true" />
+      <Label layoutX="23.0" layoutY="219.0" text="3. 作成ボタンを押してください。" />
+      <Button fx:id="createPdfButton" layoutX="36.0" layoutY="243.0" mnemonicParsing="false" text="PDF作成" />
+      <Label fx:id="outputHintLabel" layoutX="36.0" layoutY="278.0" prefHeight="63.0" prefWidth="223.0" wrapText="true" />
+      <Label fx:id="processingLabel" layoutX="109.0" layoutY="247.0" text="処理中.." />
     </children>
 </AnchorPane>

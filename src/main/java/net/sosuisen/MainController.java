@@ -1,5 +1,6 @@
 package net.sosuisen;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,13 +12,16 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -29,6 +33,9 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
  * This class must be specified as the fx:controller in main.fxml.
  */
 public class MainController {
+    @FXML
+    private Label processingLabel;
+
     @FXML
     private TextField pdfTitleLabel;
 
@@ -46,6 +53,15 @@ public class MainController {
 
     private Model model;
 
+    private final Map<String, String> processingMessages = new HashMap<>() {
+        {
+            put("PROCESSING", "処理中..");
+            put("COMPLETED", "できました!");
+            put("ERROR", "失敗しました..");
+            put("EMPTY", "");
+        }
+    };
+
     public MainController(Model model) {
         // Notice that @FXML-annotated fields (e.g., messageLabel) have not been loaded
         // yet.
@@ -58,6 +74,7 @@ public class MainController {
         folderNameLabel.textProperty().bind(model.folderNameTextProperty());
 
         selectFolderButton.setOnAction(e -> onSelectFolder());
+
         createPdfButton.setOnAction(e -> onCreatePdf());
 
         createPdfButton.disableProperty().bind(
@@ -74,6 +91,17 @@ public class MainController {
                         model.pdfTitleTextProperty(),
                         ".pdf"));
         outputHintLabel.textProperty().bind(model.outputHintTextProperty());
+
+        processingLabel.setText(processingMessages.get("EMPTY"));
+
+        // Clear processing message when title or folder changes
+        model.pdfTitleTextProperty().addListener((obs, oldVal, newVal) -> {
+            processingLabel.setText(processingMessages.get("EMPTY"));
+        });
+
+        model.folderNameTextProperty().addListener((obs, oldVal, newVal) -> {
+            processingLabel.setText(processingMessages.get("EMPTY"));
+        });
 
     }
 
@@ -95,12 +123,34 @@ public class MainController {
         String pdfTitle = model.pdfTitleTextProperty().get();
         String folderPath = model.folderNameTextProperty().get();
 
-        try {
-            createPdfFromImages(folderPath, pdfTitle);
-        } catch (IOException e) {
-            System.err.println("Error creating PDF: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Unbind and disable button during processing, show processing label
+        createPdfButton.disableProperty().unbind();
+        createPdfButton.setDisable(true);
+        processingLabel.setText(processingMessages.get("PROCESSING"));
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                createPdfFromImages(folderPath, pdfTitle);
+                Platform.runLater(() -> {
+                    processingLabel.setText(processingMessages.get("COMPLETED"));
+                    System.out.println("PDF creation completed successfully");
+                });
+            } catch (IOException e) {
+                Platform.runLater(() -> {
+                    processingLabel.setText(processingMessages.get("ERROR"));
+                    System.err.println("Error creating PDF: " + e.getMessage());
+                    e.printStackTrace();
+                });
+            } finally {
+                Platform.runLater(() -> {
+                    // Re-bind the disable property
+                    createPdfButton.disableProperty().bind(
+                            Bindings.isEmpty(model.pdfTitleTextProperty())
+                                    .or(Bindings.isEmpty(model.folderNameTextProperty())));
+
+                });
+            }
+        });
     }
 
     private void createPdfFromImages(String folderPath, String pdfTitle) throws IOException {
@@ -113,6 +163,11 @@ public class MainController {
         }
 
         PDDocument document = new PDDocument();
+
+        // Set PDF document properties
+        PDDocumentInformation info = document.getDocumentInformation();
+        info.setTitle(pdfTitle);
+        info.setCreator("PDF Creator Application");
 
         for (File imageFile : imageFiles) {
             PDImageXObject image = PDImageXObject.createFromFile(imageFile.getAbsolutePath(), document);
